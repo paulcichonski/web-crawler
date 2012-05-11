@@ -1,5 +1,7 @@
-pom.xml
-*jar
-/lib/
-/classes/
-.lein-deps-sum
+*.project
+*.classpath
+*.lein-deps-sum
+*.DS_Store
+lib/
+classes/
+.settings/
