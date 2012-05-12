@@ -3,6 +3,7 @@
   :dependencies [
                  [org.clojure/clojure "1.4.0"]
                  [enlive "1.0.0"]
+                 [clojurewerkz/urly "1.0.0"]
                  ]
   :dev-dependencies [
                      [com.github.robertrolandorg/lein-eclipse "1.1.0"]                     
