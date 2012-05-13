@@ -66,13 +66,26 @@ rely on all html being valid xml.....actually it seems like enlive returns a val
           root-page (fetch-page start)
           domain-links (grab-domain-links (enlive/select root-page [:a]))]
       (store-page root-page (str directory "root.html"))
-      (loop [link (((first domain-links) :attrs) :href) ;; HACK to test, need to go throuh entire list!
+      
+      ;; the slow way - using non-tail recursion....but works!
+      (letfn [(wrong-way [links dp]
+                         (for [link links] ;; depth-first, each link from the base will start its own recursion tree down a spine
+                           (let [valid-link (.toURL (urly/resolve start-urly (urly/url-like link)))]
+                             (if (> dp 1) 
+                               (store-page (fetch-page link) (str (urly/path-of (urly/url-like valid-link)) ".html"))
+                               (wrong-way (grab-domain-links (enlive/select link [:a]))
+                                      (dec dp))))))]
+             (wrong-way (map #((% :attrs) :href) domain-links) depth)))))
+      
+      ;; the "right" way, but not yet working --> cannot have the for() inside the loop, since that makes it so recur is not in tail...need to fix or this is going to be slow!
+      (comment (loop [links (map #((% :attrs) :href) domain-links)
              dp depth]
-        (let [valid-link (.toURL (urly/resolve start-urly (urly/url-like link)))]
-          (if (> dp 1) 
-                (store-page (fetch-page link) (str (urly/path-of (urly/url-like valid-link)) ".html"))
-                (recur (first (grab-domain-links (enlive/select link [:a]))) ;; HACK to test, need to go throuh entire list!
-                       (dec dp))))))))
+        (for [link links] ;; depth-first, each link from the base will start its own recursion tree down a spine
+          (let [valid-link (.toURL (urly/resolve start-urly (urly/url-like link)))]
+            (if (> dp 1) 
+              (store-page (fetch-page link) (str (urly/path-of (urly/url-like valid-link)) ".html"))
+              (recur (grab-domain-links (enlive/select link [:a]))
+                     (dec dp)))))))
 
 
 
