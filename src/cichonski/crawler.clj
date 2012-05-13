@@ -3,10 +3,11 @@
     :doc "crawls and stores html pages.
 
            work-in-progress"}
-    (:use [clojure.string :only (split)])
+    (:use [clojure.string :only (split replace-first)])
     (:require [net.cgrand.enlive-html :as enlive]
               [clojurewerkz.urly.core :as urly])
-    (:import [clojurewerkz.urly UrlLike]))
+    (:import [clojurewerkz.urly UrlLike]
+             [java.io File]))
 
 (comment "the follow-redirect logic works, but it still doesn't handle everything, clojure.org has a redirect scheme to wiki.sessions to track users,
 and then back to clojure.org with a session token...it traveerses the links but still gets nothing back. TODO: fix")
@@ -37,7 +38,16 @@ and then back to clojure.org with a session token...it traveerses the links but 
           :else (throw (Exception. (str "not able to detrmine if target link is local, need new case for: " target))))))
 
 (defn- store-page [html-map file-loc]
-  (spit file-loc (apply str (enlive/emit* html-map))))
+  (let [file-loc (if (= (.substring file-loc 0 1) "/") ;;--> needed for mac, not sure about other OS.
+                   (replace-first file-loc #"/" "") 
+                   file-loc)]
+    (if (false? (.exists (File. file-loc)))  ;; if no file exists you need to create it, first create dir structure.
+      (let [dir-componets (pop (split file-loc #"/"))
+            dir-structure (reduce (fn [x y] (str x "/" y)) dir-componets)]
+        (if (> (count dir-componets) 0) 
+          (.mkdirs (File. dir-structure)))
+        (.createNewFile (File. file-loc))))
+    (spit file-loc (apply str (enlive/emit* html-map)))))
 
 
 (comment "would like to use a zipper here for in-line editing of the tree (i.e., to make all links local), but may not be possible since cannot 
@@ -60,7 +70,7 @@ rely on all html being valid xml.....actually it seems like enlive returns a val
              dp depth]
         (let [valid-link (.toURL (urly/resolve start-urly (urly/url-like link)))]
           (if (> dp 1) 
-                (store-page (fetch-page link) "root/link1.html")
+                (store-page (fetch-page link) (str (urly/path-of (urly/url-like valid-link)) ".html"))
                 (recur (first (grab-domain-links (enlive/select link [:a]))) ;; HACK to test, need to go throuh entire list!
                        (dec dp))))))))
 
