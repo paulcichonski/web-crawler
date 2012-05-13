@@ -90,8 +90,8 @@ rely on all html being valid xml.....actually it seems like enlive returns a val
 
 
 
-(comment "todays goals:
-          1) write code for storing pages
-          2) write code for recursing through link structure to the requested depth
+(comment "next work period goals:
+          1) make it so tail-recursion works on crawl-domain
+          2) fix bugs, new ones crop up for each domain searched....
           3) write code for ensuring all links to children-pages are made local
           4) store images")
