@@ -1,4 +1,4 @@
-web-crawler
+web-crawler (very work-in-progres)
 ===========
 
 Simple tool to crawl a single domain (to a specified depth) and store content for offline use.
